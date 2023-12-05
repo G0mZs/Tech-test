@@ -9,14 +9,16 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["CallDetailRecordAPI/CallDetailRecordAPI.csproj", "CallDetailRecordAPI/"]
-RUN dotnet restore "./CallDetailRecordAPI/./CallDetailRecordAPI.csproj"
-COPY . .
+RUN dotnet restore "CallDetailRecordAPI/CallDetailRecordAPI.csproj"
+
 WORKDIR "/src/CallDetailRecordAPI"
-RUN dotnet build "./CallDetailRecordAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
+COPY . .
+
+RUN dotnet build "CallDetailRecordAPI/CallDetailRecordAPI.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./CallDetailRecordAPI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "CallDetailRecordAPI/CallDetailRecordAPI.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
