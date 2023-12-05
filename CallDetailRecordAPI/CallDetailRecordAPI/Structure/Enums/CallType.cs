@@ -1,4 +1,6 @@
-﻿namespace CallDetailRecordAPI.Structure
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace CallDetailRecordAPI.Structure
 {
     /// <summary>Represents a call type.</summary>
     public enum CallType
