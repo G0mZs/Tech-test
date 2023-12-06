@@ -6,7 +6,9 @@ namespace CallDetailRecordAPI.Extensions
     /// <summary>Represents the CDR extensions.</summary>
     public static class CdrExtensions
     {
-        /// <summary>Adds the services.</summary>
+        #region Public Methods
+
+        /// <summary>Converts a <see cref="CsvCallDetailRecord"/>into a <see cref="CallDetailRecord"/>.</summary>
         /// <param name="csvCallDetailRecord">The csv CDR</param>
         /// <returns>The call detail record.</returns>
         public static CallDetailRecord ToCallDetailRecord(this CsvCallDetailRecord csvCallDetailRecord)
@@ -29,5 +31,11 @@ namespace CallDetailRecordAPI.Extensions
                 Type = CallType.International
             };
         }
+
+        #endregion
+
+        #region Private Methods
+
+        #endregion
     }
 }

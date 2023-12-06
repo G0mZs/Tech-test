@@ -7,6 +7,7 @@ using CallDetailRecordAPI.Structure.Requests;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Globalization;
 
@@ -15,6 +16,9 @@ namespace CallDetailRecordAPI.Services
     ///<summary>Represents the CDR service.</summary>
     public class CdrService : ICdrService
     {
+        ///<summary>The Mongo database.</summary>
+        private readonly IMongoDatabase _database;
+
         ///<summary>The CDR database configuration.</summary>
         private readonly IOptions<CdrDatabaseConfiguration> _options;
 
@@ -22,21 +26,20 @@ namespace CallDetailRecordAPI.Services
         private readonly IMongoCollection<CallDetailRecord> _cdrCollection;
 
         ///<summary>Initializes an instance of <see cref="CdrService"/></summary>
+        ///<param name="database">The database</param>
         ///<param name="options">The options</param>
         /// <exception cref="ArgumentNullException">
+        ///     <paramref name="database"/>
         ///     <paramref name="options"/>
         /// </exception>
-        public CdrService(IOptions<CdrDatabaseConfiguration> options)
+        public CdrService(
+            IMongoDatabase database,
+            IOptions<CdrDatabaseConfiguration> options)
         {
+            _database = database ?? throw new ArgumentNullException(nameof(database));
             _options = options ?? throw new ArgumentNullException(nameof(options));
 
-            var mongoClient = new MongoClient(
-            _options.Value.ConnectionString);
-
-            var mongoDatabase = mongoClient.GetDatabase(
-                _options.Value.DatabaseName);
-
-            _cdrCollection = mongoDatabase.GetCollection<CallDetailRecord>(
+            _cdrCollection = _database.GetCollection<CallDetailRecord>(
                 _options.Value.CallRecordsCollectionName);
         }
 
@@ -74,13 +77,13 @@ namespace CallDetailRecordAPI.Services
                 throw new ArgumentException("The reference can't be null or whitespace", nameof(reference));
             }
 
-            return await _cdrCollection
-                .Find(cdr => cdr.Reference == reference)
-                .FirstOrDefaultAsync();
+            var result = await _cdrCollection.FindAsync(cdr => cdr.Reference == reference);
+
+            return await result.FirstOrDefaultAsync();
         }
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<CallDetailRecord>> GetCdrsByCallerIdAsync(CdrsRequest request)
+        public async Task<CallStatistics> GetCallStatisticsAsync(CallStatisticsRequest request)
         {
             if (request == null)
             {
@@ -89,11 +92,98 @@ namespace CallDetailRecordAPI.Services
 
             ValidateDates(request.StartDate, request.EndDate);
 
-            var filters = CdrHelper.CreateQueryFilters(request);
+            var filters = CdrHelper.CreateCallStatisticsQueryFilter(
+                request.StartDate,
+                request.EndDate,
+                request.Type);
 
-            return await _cdrCollection
+            var pipelineDefinition = PipelineDefinition<CallDetailRecord, BsonDocument>.Create(
+            new IPipelineStageDefinition[]
+            {
+                PipelineStageDefinitionBuilder.Match(filters),
+                PipelineStageDefinitionBuilder.Group<CallDetailRecord, BsonDocument>(
+                    new BsonDocument
+                    {
+                        { "_id", 1 },
+                        { "TotalCalls", new BsonDocument("$sum", 1) },
+                        { "TotalDuration", new BsonDocument("$sum", "$Duration") }
+                    }),
+            });
+
+            var result = await _cdrCollection.AggregateAsync(pipelineDefinition);
+
+            var data = await result.FirstOrDefaultAsync();
+
+            long count = 0;
+            long totalDuration = 0;
+
+            if (data != null)
+            {
+                count = data["TotalCalls"].AsInt32;
+                totalDuration = data["TotalDuration"].AsInt32;
+            }
+
+            return new CallStatistics
+            {
+                Count = count,
+                TotalDuration = totalDuration
+            };
+        }
+
+        /// <inheritdoc/>
+        public async Task<IEnumerable<CallDetailRecord>> GetCdrsByCallerIdAsync(
+            CdrsRequest request)
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            ValidateCallerId(request.CallerId);
+
+            ValidateDates(request.StartDate, request.EndDate);
+
+            var filters = CdrHelper.CreateQueryFilters(
+                request.CallerId,
+                request.StartDate,
+                request.EndDate,
+                request.Type);
+
+            var result = await _cdrCollection.FindAsync(filters);
+
+            return await result.ToListAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task<IEnumerable<CallDetailRecord>> GetMostExpensiveCallsByCallerIdAsync(
+            MostExpensiveCallsRequest request)
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            ValidateCallerId(request.CallerId);
+
+            ValidateTake(request.Take);
+
+            ValidateDates(request.StartDate, request.EndDate);
+
+            var filters = CdrHelper.CreateQueryFilters(
+                request.CallerId,
+                request.StartDate,
+                request.EndDate,
+                request.Type);
+
+            var sort = Builders<CallDetailRecord>.Sort.Descending(x => x.Cost);
+
+            var result = await _cdrCollection
                 .Find(filters)
-                .ToListAsync();
+                .Sort(sort)
+                .Limit(request.Take)
+                .ToCursorAsync();
+
+            return await result.ToListAsync();
         }
 
         #endregion
@@ -107,7 +197,7 @@ namespace CallDetailRecordAPI.Services
         ///     <paramref name="startDate"/>
         ///     <paramref name="endDate"/>
         /// </exception>
-        private void ValidateDates(DateTime startDate, DateTime endDate)
+        private static void ValidateDates(DateTime startDate, DateTime endDate)
         {
             if (startDate > DateTime.UtcNow)
             {
@@ -128,6 +218,28 @@ namespace CallDetailRecordAPI.Services
             if (dateRange > TimeSpan.FromDays(30))
             {
                 throw new ArgumentException("The date range cannot exceed 30 days.", nameof(endDate));
+            }
+        }
+
+        /// <summary>Validates the given caller identifier.</summary>
+        /// <param name="callerId">The caller identifier (phone number).</param>
+        /// <exception cref="ArgumentException"><paramref name="callerId"/></exception>
+        private static void ValidateCallerId(string callerId)
+        {
+            if (string.IsNullOrWhiteSpace(callerId))
+            {
+                throw new ArgumentException("Caller identifier can't be null or whitespace.", nameof(callerId));
+            }
+        }
+
+        /// <summary>Validates the take.</summary>
+        /// <param name="take">The take.</param>
+        /// <exception cref="ArgumentException"><paramref name="take"/></exception>
+        private static void ValidateTake(int take)
+        {
+            if (take < 1)
+            {
+                throw new ArgumentException("The take value must be 1 or higher.", nameof(take));
             }
         }
 

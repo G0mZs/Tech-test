@@ -1,6 +1,5 @@
 ﻿using CallDetailRecordAPI.Structure;
 using CallDetailRecordAPI.Structure.Models;
-using CallDetailRecordAPI.Structure.Requests;
 using MongoDB.Driver;
 
 namespace CallDetailRecordAPI.Helpers
@@ -9,19 +8,51 @@ namespace CallDetailRecordAPI.Helpers
     public static class CdrHelper
     {
         /// <summary>Creates the query filters.</summary>
-        /// <param name="request">The request.</param>
-        public static FilterDefinition<CallDetailRecord> CreateQueryFilters(CdrsRequest request)
+        /// <param name="callerId">The caller identifier.</param>
+        /// <param name="startDate">The start date.</param>
+        /// <param name="endDate">The end date.</param>
+        /// <param name="type">The call type.</param>
+        /// <returns>The query filters.</returns>
+        public static FilterDefinition<CallDetailRecord> CreateQueryFilters(
+            string callerId,
+            DateTime startDate,
+            DateTime endDate,
+            CallType? type)
         {
             var filterBuilder = Builders<CallDetailRecord>.Filter;
             var filter = filterBuilder.And(
-                filterBuilder.Eq(item => item.CallerId, request.CallerId),
-                filterBuilder.Gte(item => item.CallDate, request.StartDate),
-                filterBuilder.Lt(item => item.CallDate, request.EndDate)
+                filterBuilder.Eq(item => item.CallerId, callerId),
+                filterBuilder.Gte(item => item.CallDate, startDate),
+                filterBuilder.Lt(item => item.CallDate, endDate)
             );
 
-            if (request.Type.HasValue && Enum.IsDefined(typeof(CallType), request.Type.Value))
+            if (type.HasValue && Enum.IsDefined(typeof(CallType), type.Value))
             {
-                filter &= filterBuilder.Eq(item => item.Type, request.Type.Value);
+                filter &= filterBuilder.Eq(item => item.Type, type.Value);
+            }
+
+            return filter;
+        }
+
+        /// <summary>Creates the call statistics query filters.</summary>
+        /// <param name="startDate">The start date.</param>
+        /// <param name="endDate">The end date.</param>
+        /// <param name="type">The call type.</param>
+        /// <returns>The query filters.</returns>
+        public static FilterDefinition<CallDetailRecord> CreateCallStatisticsQueryFilter(
+            DateTime startDate,
+            DateTime endDate,
+            CallType? type)
+        {
+            var filterBuilder = Builders<CallDetailRecord>.Filter;
+            var filter = filterBuilder.And(
+                filterBuilder.Gte(item => item.CallDate, startDate),
+                filterBuilder.Lt(item => item.CallDate, endDate)
+            );
+
+            if (type.HasValue && Enum.IsDefined(typeof(CallType), type.Value))
+            {
+                filter &= filterBuilder.Eq(item => item.Type, type.Value);
             }
 
             return filter;
