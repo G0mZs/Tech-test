@@ -77,9 +77,9 @@ namespace CallDetailRecordAPI.Services
                 throw new ArgumentException("The reference can't be null or whitespace", nameof(reference));
             }
 
-            var result = await _cdrCollection.FindAsync(cdr => cdr.Reference == reference);
-
-            return await result.FirstOrDefaultAsync();
+            return await _cdrCollection
+                .Find(item => item.Reference == reference)
+                .FirstOrDefaultAsync();
         }
 
         /// <inheritdoc/>
@@ -149,9 +149,9 @@ namespace CallDetailRecordAPI.Services
                 request.EndDate,
                 request.Type);
 
-            var result = await _cdrCollection.FindAsync(filters);
-
-            return await result.ToListAsync();
+            return await _cdrCollection
+                .Find(filters)
+                .ToListAsync();
         }
 
         /// <inheritdoc/>
@@ -175,15 +175,13 @@ namespace CallDetailRecordAPI.Services
                 request.EndDate,
                 request.Type);
 
-            var sort = Builders<CallDetailRecord>.Sort.Descending(x => x.Cost);
+            var sort = Builders<CallDetailRecord>.Sort.Descending(item => item.Cost);
 
-            var result = await _cdrCollection
+            return await _cdrCollection
                 .Find(filters)
                 .Sort(sort)
                 .Limit(request.Take)
-                .ToCursorAsync();
-
-            return await result.ToListAsync();
+                .ToListAsync();
         }
 
         #endregion
