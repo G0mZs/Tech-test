@@ -1,40 +1,41 @@
-﻿using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
 namespace CallDetailRecordAPI.Structure.Models
 {
-    /// <summary>Represents a call details record (CDR).</summary>
+    /// <summary>Represents a call detail record (CDR).</summary>
     public class CallDetailRecord
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
         /// <summary>Gets or sets the unique reference for the call.</summary>
-        public string Reference { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.String)]
+        public required string Reference { get; set; }
 
-        [BsonRequired]
         /// <summary>Gets or sets the caller phone number.</summary>
-        public string CallerId { get; set; }
-
         [BsonRequired]
+        public required string CallerId { get; set; }
+
         /// <summary>Gets or sets the recipient phone number.</summary>
-        public string Recipient { get; set; }
+        [BsonRequired]
+        public required string Recipient { get; set; }
 
-        [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
         /// <summary>Gets or sets the call date.</summary>
-        public DateTime CallDate { get; set; }
-
+        [BsonRequired]
         [BsonDateTimeOptions(Kind = DateTimeKind.Utc)]
+        public required DateTime CallDate { get; set; }
+
         /// <summary>Gets or sets the time when the call ended.</summary>
-        public DateTime EndTime { get; set; }
+        public required TimeSpan EndTime { get; set; }
 
         /// <summary>Gets or sets the currency.</summary>
-        public string Currency { get; set; }
+        public required string Currency { get; set; }
 
         /// <summary>Gets or sets the duration.</summary>
         public int Duration { get; set; }
 
-        [BsonRequired]
         /// <summary>Gets or sets the call cost.</summary>
+        [BsonRequired]
+        [BsonRepresentation(BsonType.Decimal128)]
         public decimal Cost { get; set; }
 
         /// <summary>Gets or sets the call type.</summary>

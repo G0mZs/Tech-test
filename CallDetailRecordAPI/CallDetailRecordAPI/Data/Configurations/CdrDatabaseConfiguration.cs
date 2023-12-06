@@ -1,11 +1,15 @@
 ﻿namespace CallDetailRecordAPI.Data.Configurations
 {
+    /// <summary>Represents the CDR database configuration.</summary>
     public class CdrDatabaseConfiguration
     {
-        public string ConnectionString { get; set; } = string.Empty;
+        /// <summary>The connection string.</summary>
+        public required string ConnectionString { get; set; }
 
-        public string DatabaseName { get; set; } = string.Empty;
+        /// <summary>The database name.</summary>
+        public required string DatabaseName { get; set; }
 
-        public string CallRecordsCollectionName { get; set; } = string.Empty;
+        /// <summary>The call records collection name.</summary>
+        public required string CallRecordsCollectionName { get; set; }
     }
 }
