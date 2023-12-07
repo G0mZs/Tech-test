@@ -1,4 +1,4 @@
-﻿using CallDetailRecordAPI.Structure;
+﻿using CallDetailRecordAPI.Helpers;
 using CallDetailRecordAPI.Structure.Models;
 
 namespace CallDetailRecordAPI.Extensions
@@ -18,6 +18,12 @@ namespace CallDetailRecordAPI.Extensions
                 return null!;
             }
 
+            if (string.IsNullOrWhiteSpace(csvCallDetailRecord.caller_id) ||
+                string.IsNullOrWhiteSpace(csvCallDetailRecord.recipient))
+            {
+                return null!;
+            }
+
             return new CallDetailRecord
             {
                 Reference = csvCallDetailRecord.reference,
@@ -28,13 +34,9 @@ namespace CallDetailRecordAPI.Extensions
                 Currency = csvCallDetailRecord.currency,
                 Duration = csvCallDetailRecord.duration,
                 Cost = csvCallDetailRecord.cost,
-                Type = CallType.International
+                Type = CdrHelper.DetermineCallType(csvCallDetailRecord.caller_id, csvCallDetailRecord.recipient)
             };
         }
-
-        #endregion
-
-        #region Private Methods
 
         #endregion
     }

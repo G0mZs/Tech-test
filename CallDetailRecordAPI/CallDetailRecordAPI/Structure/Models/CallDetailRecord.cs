@@ -25,6 +25,7 @@ namespace CallDetailRecordAPI.Structure.Models
         public required DateTime CallDate { get; set; }
 
         /// <summary>Gets or sets the time when the call ended.</summary>
+        [BsonRequired]
         public required TimeSpan EndTime { get; set; }
 
         /// <summary>Gets or sets the currency.</summary>
@@ -39,6 +40,7 @@ namespace CallDetailRecordAPI.Structure.Models
         public decimal Cost { get; set; }
 
         /// <summary>Gets or sets the call type.</summary>
+        [BsonRequired]
         public CallType Type { get; set; }
     }
 }
