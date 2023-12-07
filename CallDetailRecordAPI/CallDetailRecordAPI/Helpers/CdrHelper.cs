@@ -5,7 +5,7 @@ using MongoDB.Driver;
 namespace CallDetailRecordAPI.Helpers
 {
     /// <summary>The CDR helper.</summary>
-    public static class CdrHelper
+    public static partial class CdrHelper
     {
         /// <summary>Creates the query filters.</summary>
         /// <param name="callerId">The caller identifier.</param>
@@ -56,6 +56,22 @@ namespace CallDetailRecordAPI.Helpers
             }
 
             return filter;
+        }
+
+        /// <summary>Determines if a call is domestic or international.</summary>
+        /// <param name="callerNumber">The caller phone number.</param>
+        /// <param name="recipientNumber">The recipient phone number.</param>
+        /// <returns>The call type.</returns>
+        public static CallType DetermineCallType(string callerNumber, string recipientNumber)
+        {
+            const string UkCountryCode = "44";
+
+            if (recipientNumber.StartsWith(UkCountryCode) && callerNumber.StartsWith(UkCountryCode))
+            {
+                return CallType.Domestic; // UK (Domestic)
+            }
+
+            return CallType.International; // International
         }
     }
 }

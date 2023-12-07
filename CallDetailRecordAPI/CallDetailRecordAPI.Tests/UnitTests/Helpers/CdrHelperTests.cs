@@ -76,6 +76,54 @@ namespace CallDetailRecordAPI.Tests.UnitTests.Helpers
 
         #endregion
 
+        #region DetermineCallType
+
+        [Fact]
+        public void DetermineCallType_WithUkPhoneNumbers_ReturnsDomesticCallType()
+        {
+            string callerNumberUK = "441234567890";
+            string recipientNumberUK = "441987654321";
+
+            var result = CdrHelper.DetermineCallType(callerNumberUK, recipientNumberUK);
+
+            result.Should().Be(CallType.Domestic);
+        }
+
+        [Fact]
+        public void DetermineCallType_WithInternationalPhoneNumbers_ReturnsInternationalCallType()
+        {
+            string callerNumberInternational = "491234567890";
+            string recipientNumberInternational = "499876543210";
+
+            var result = CdrHelper.DetermineCallType(callerNumberInternational, recipientNumberInternational);
+
+            result.Should().Be(CallType.International);
+        }
+
+        [Fact]
+        public void DetermineCallType_WithUkCallerIdAndInternationalRecipient_ReturnsInternationalCallType()
+        {
+            string callerNumberInternational = "441234567890";
+            string recipientNumberInternational = "499876543210";
+
+            var result = CdrHelper.DetermineCallType(callerNumberInternational, recipientNumberInternational);
+
+            result.Should().Be(CallType.International);
+        }
+
+        [Fact]
+        public void DetermineCallType_WithInternationalCallerIdAndUkRecipient_ReturnsInternationalCallType()
+        {
+            string callerNumberInternational = "491234567890";
+            string recipientNumberInternational = "441234567890";
+
+            var result = CdrHelper.DetermineCallType(callerNumberInternational, recipientNumberInternational);
+
+            result.Should().Be(CallType.International);
+        }
+
+        #endregion
+
         #region Private Methods
 
         private static string ConvertFilterToJson(FilterDefinition<CallDetailRecord> filter)
