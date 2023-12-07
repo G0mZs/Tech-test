@@ -20,6 +20,36 @@ namespace CallDetailRecordAPI.Tests.UnitTests.Extensions
             result.Should().BeNull();
         }
 
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public void ToCallDetailRecord_InvalidCallerId_ReturnsNull(string callerId)
+        {
+            var csvCallDetailRecord = _fixture.Build<CsvCallDetailRecord>()
+                .With(item => item.caller_id, callerId)
+                .Create();
+
+            var result = csvCallDetailRecord.ToCallDetailRecord();
+
+            result.Should().BeNull();
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData(" ")]
+        public void ToCallDetailRecord_InvalidRecipient_ReturnsNull(string recipient)
+        {
+            var csvCallDetailRecord = _fixture.Build<CsvCallDetailRecord>()
+                .With(item => item.recipient, recipient)
+                .Create();
+
+            var result = csvCallDetailRecord.ToCallDetailRecord();
+
+            result.Should().BeNull();
+        }
+
         [Fact]
         public void ToCallDetailRecord_WithCorrectData_ReturnsCallDetailRecord()
         {
