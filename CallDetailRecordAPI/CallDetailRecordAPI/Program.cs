@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,12 +25,16 @@ builder.Services.AddScoped(sp =>
 
 builder.Services.AddServices();
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
 {
-    //c.SchemaFilter<EnumSchemaFilter>();
+    c.SchemaFilter<EnumSchemaFilter>();
 
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "CallDetailRecordAPI", Version = "v1" });
 

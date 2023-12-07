@@ -1,4 +1,6 @@
-﻿namespace CallDetailRecordAPI.Structure.Models
+﻿using System.Text.Json.Serialization;
+
+namespace CallDetailRecordAPI.Structure.Models
 {
     /// <summary>Represents the calls statistics.</summary>
     public class CallStatistics

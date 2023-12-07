@@ -64,9 +64,18 @@ namespace CallDetailRecordAPI.Services
                 .Select(item => item.ToCallDetailRecord())
                 .ToList();
 
-            await _cdrCollection.InsertManyAsync(callDetailRecords);
+            var validDocuments = callDetailRecords
+                .Where(item => item != null)
+                .ToList();
 
-            return true;
+            if (validDocuments.Any())
+            {
+                await _cdrCollection.InsertManyAsync(validDocuments);
+
+                return true;
+            }
+
+            return false;
         }
 
         /// <inheritdoc/>
