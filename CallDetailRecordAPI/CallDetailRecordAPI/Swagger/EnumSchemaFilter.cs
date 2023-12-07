@@ -2,20 +2,23 @@
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
-/// <summary>Represents the enum schema filter.</summary>
-public class EnumSchemaFilter : ISchemaFilter
+namespace CallDetailRecordAPI.Swagger
 {
-    /// <summary>Applies the enum schema filter.</summary>
-    /// <param name="schema">The schema.</param>
-    /// <param name="context">The context.</param>
-    public void Apply(OpenApiSchema schema, SchemaFilterContext context)
+    /// <summary>Represents the enum schema filter.</summary>
+    public class EnumSchemaFilter : ISchemaFilter
     {
-        if (context.Type.IsEnum)
+        /// <summary>Applies the enum schema filter.</summary>
+        /// <param name="schema">The schema.</param>
+        /// <param name="context">The context.</param>
+        public void Apply(OpenApiSchema schema, SchemaFilterContext context)
         {
-            schema.Enum.Clear();
-            Enum.GetNames(context.Type)
-                .ToList()
-                .ForEach(name => schema.Enum.Add(new OpenApiString($"{name}")));
+            if (context.Type.IsEnum)
+            {
+                schema.Enum.Clear();
+                Enum.GetNames(context.Type)
+                    .ToList()
+                    .ForEach(name => schema.Enum.Add(new OpenApiString($"{name}")));
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 using CallDetailRecordAPI.Data.Configurations;
 using CallDetailRecordAPI.Extensions;
+using CallDetailRecordAPI.Swagger;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
