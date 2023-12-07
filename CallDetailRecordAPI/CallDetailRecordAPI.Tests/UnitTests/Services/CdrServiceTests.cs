@@ -90,10 +90,26 @@ namespace CallDetailRecordAPI.Tests.UnitTests.Services
         }
 
         [Fact]
+        public async Task UploadCallDetailRecordsCsvAsync_FileWithWrongData_ReturnFalse()
+        {
+            var CsvContent = "caller_id,recipient,call_date,end_time,duration,cost,reference,currency";
+
+            var csvFile = CreateCsvFileFromString(CsvContent);
+
+            var result = await _service.UploadCallDetailRecordsCsvAsync(csvFile);
+
+            result.Should().BeFalse();
+        }
+
+        [Fact]
         public async Task UploadCallDetailRecordsCsvAsync_ValidFile_ReturnTrue()
         {
-            var csvContent = "caller_id,recipient,call_date,end_time,duration,cost,reference,currency";
-            var csvFile = CreateCsvFileFromString(csvContent);
+            const string CorrectDataLine = "442036401149,44800833833,16/08/2016,14:00:47,244,0,C50B5A7BDB8D68B8512BB14A9D363CAA1,GBP";
+
+            var CsvContent = "caller_id,recipient,call_date,end_time,duration,cost,reference,currency" +
+                Environment.NewLine + CorrectDataLine;
+
+            var csvFile = CreateCsvFileFromString(CsvContent);
 
             var result = await _service.UploadCallDetailRecordsCsvAsync(csvFile);
 
